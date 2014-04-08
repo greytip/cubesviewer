@@ -170,15 +170,32 @@ function cubesviewerViewCubeFacts() {
 		
 		var dimensions = view.cube.dimensions;
 		var measures = view.cube.measures;
+		var details = view.cube.details;
+
+        var key = view.cube.key;
+        var info = view.cube.info;
+        var keyTitle = info.keyTitle || "Key";
+        var keyColWidth = info.keyColWidth || 150;
 		
-		colNames.push("ID");
+		colNames.push('ID');
 		colModel.push({
-			name : "id",
-			index : "id",
+			name : '_id',
+			index : '_id',
 			align : "left",
-			width : cubesviewer.views.cube.explore.defineColumnWidth(view, "id", 65),
-			sorttype : "number",
+			width : 65,
+			sorttype : "number"
 		});
+
+        if (key && key != 'id') {
+            colNames.push(keyTitle);
+            colModel.push({
+                name : key,
+                index : key,
+                align : "left",
+                width : cubesviewer.views.cube.explore.defineColumnWidth(view, key, keyColWidth)
+                // sorttype : "number",
+            });
+        }
 		
 		for ( var dimensionIndex in dimensions) {
 			// Get dimension
@@ -204,7 +221,7 @@ function cubesviewerViewCubeFacts() {
 		for (var measureIndex in measures) {
 			var measure = measures[measureIndex];
 			
-			colNames.push(measure.name);
+			colNames.push(measure.label);
 			colModel.push({
 				name : measure.full_name,
 				index : measure.full_name,
@@ -217,6 +234,17 @@ function cubesviewerViewCubeFacts() {
 			});
 		}
 		
+		for (var detailIndex in details) {
+			var detail = details[detailIndex];
+			
+			colNames.push(detail.label || detail.full_name);
+			colModel.push({
+				name : detail.full_name,
+				index : detail.full_name,
+				align : "left",
+				width : cubesviewer.views.cube.explore.defineColumnWidth(view, detail.full_name, 75)
+			});
+		}
 		
 		// Process cells
 		view.cubesviewer.views.cube.facts._addRows (view, dataRows, data);
@@ -265,15 +293,16 @@ function cubesviewerViewCubeFacts() {
 	 */
 	this._addRows = function(view, rows, data) {
 
-		var counter = 0;
+		var counter = 1;
 		var dimensions = view.cube.dimensions;
 		var measures = view.cube.measures;
+		var details = view.cube.details;
+        var key = view.cube.key;
 		
 		$(data).each( function(idx, e) {
 
 			var nid = [];
 			var row = [];
-			var key = [];
 			
 			for ( var dimensionIndex in dimensions) {
 				// Get dimension
@@ -295,10 +324,14 @@ function cubesviewerViewCubeFacts() {
 			}
 			
 
+			for (var detailIndex in details) {
+				var detail = details[detailIndex];
+				row[detail.full_name] = e[detail.full_name];
+			}
+
 			// Set key
-			row["id"] = counter++;
-			if ("id" in e) row["id"] = e["id"];
-			row["key"] = row["id"];
+			row["_id"] = counter++;
+			row[key] = e[key];
 			
 			rows.push(row);
 		});
